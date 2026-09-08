@@ -27,8 +27,13 @@ costs 50 MB per machine, not 1.5 GB.
 | `weblogs-synth` | 20 JSONL shards of synthetic ad logs       | ~56 MB      | CC0-1.0       | MapReduce rollups, scheduler |
 
 Each image records its upstream source, license, and a one-line
-description in its image labels (`docker inspect` shows them). I will
-announce the exact image references to use for the course datasets.
+description in its image labels (`docker inspect` shows them). The image
+references are public and need no login to pull:
+
+- `ghcr.io/spin-vt/datasets/fashion-mnist:v1`
+- `ghcr.io/spin-vt/datasets/mnist:v1`
+- `ghcr.io/spin-vt/datasets/wikitext-2:v1`
+- `ghcr.io/spin-vt/datasets/weblogs-synth:v1`
 
 ## How hokea consumes a dataset
 

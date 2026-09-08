@@ -143,9 +143,8 @@ def hokea_cluster(tmp_path):
                            # introductory lab, Act 3)
                            name="myproj", namespace=namespace, port=8000,
                            workdir=tmp_path / "cluster",
-                           # k8s: an image reference. This one is a
-                           # placeholder — I will give you the real ref
-                           # (see the note below).
+                           # k8s: an image reference. This is one of the
+                           # course dataset images (see the Datasets page).
                            data="ghcr.io/spin-vt/datasets/wikitext-2:v1")
     from hokea import Cluster
     return Cluster(image="python:3.12-slim", src=HERE,
@@ -196,5 +195,5 @@ The course ships four ready-made dataset images — `fashion-mnist`,
 `mnist`, `wikitext-2`, and `weblogs-synth` — and any team can publish its
 own the same way. The [Datasets](datasets.md) page is the catalog:
 contents, sizes, licenses, and the two-line Dockerfile recipe for
-publishing yours. I will announce the current image references; get them
-from me before wiring them into your conftest.
+publishing yours, and it lists the exact image references to put in your
+conftest.
