@@ -9,7 +9,7 @@ system does against that record, and every verdict carries the recorded
 evidence it rests on.
 
 **If you are a student in the course, start with [the introductory
-lab](docs/lab.md).** Part 0 installs the tools; Act 1 takes you from zero
+lab](https://spin-vt.github.io/hokea/lab/).** Part 0 installs the tools; Act 1 takes you from zero
 to a running fault test against a toy server in about 15 minutes; the
 later acts break it, ship it to the class cluster, and break it there.
 You don't need anything else on this page yet.
@@ -63,6 +63,10 @@ def test_stays_available_during_minority_partition(cluster, net, run):
 
 ## Documentation
 
+The documentation is published as a website at
+<https://spin-vt.github.io/hokea/>. The same pages live in this repository
+under `docs/`:
+
 - [docs/lab.md](docs/lab.md) — the introductory lab, in four acts:
   run it locally (the first fifteen minutes), break it, ship it to the
   class cluster, break it in prod
@@ -78,8 +82,8 @@ def test_stays_available_during_minority_partition(cluster, net, run):
 - [docs/testing-your-claims.md](docs/testing-your-claims.md) — turning your
   project proposal's claims into falsification experiments
 
-The `docs/` pages above are also a browsable site (MkDocs + Material). To
-serve it locally:
+The website is built from `docs/` with MkDocs on every push. To serve it
+on your own machine while editing:
 
 ```bash
 uv run --group docs mkdocs serve    # http://127.0.0.1:8000
