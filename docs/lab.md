@@ -329,9 +329,8 @@ Installed 5 packages in 42ms
  + pytest==9.1.1
 ```
 
-(That clone URL is where the course repository will live; if the clone
-fails, it may not be public yet — get the URL from your instructor. The
-rest of this document assumes `toy-demo` sits next to your `hokea` clone.
+(The rest of this document assumes `toy-demo` sits next to your `hokea`
+clone.
 If you cloned it somewhere else, use your path in the `uv add --editable`
 line instead — the path is recorded in `pyproject.toml`, so if you move
 things around later, re-run `uv add --editable <new-path>` to update it.)
@@ -1747,7 +1746,7 @@ If your image genuinely can't be made public (say it contains something
 you may not publish), ask your instructor: the course staff can load an
 unpublished image directly onto the cluster's machines by hand, and
 your conftest change above works unchanged once they have. Second, the
-`hokea k8s up` command always ships a `--src` directory today, so the
+`hokea k8s up` command always ships a `--src` directory, so the
 image-alone mode is used from `conftest.py` rather than the CLI.
 
 That's the entire industry workflow — Dockerfile, build, push, deploy —
@@ -1757,11 +1756,11 @@ re-publishing the image before you can re-run, which is safer but slower.
 (Real teams automate exactly that step — a GitHub Action that rebuilds
 the image on every push is easy to set up, and left as an exercise.)
 
-## Appendix B — The Chaos Mesh dashboard and Workflows (optional; needs a per-team token we hand out later)
+## Appendix B — The Chaos Mesh dashboard and Workflows (optional; needs a per-team token)
 
-Nothing in the lab needs this appendix, and teams don't have dashboard
-tokens yet — we'll hand them out later in the course. It's here so you
-know what's coming.
+Nothing in the lab needs this appendix. The dashboard needs a per-team
+login token that I hand out separately, later in the course. It's here so
+you know what's coming.
 
 ### The Chaos Mesh dashboard
 

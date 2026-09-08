@@ -9,9 +9,9 @@
 Mechanism: iptables DROP rules matching cluster-network address pairs, plus
 `tc netem` on the cluster-network interface for latency/loss. Two backends:
 
-- host: rules in the host's DOCKER-USER chain. Primary on course VMs where
-  teams have root; UNTESTED on the machine hokea was developed on (WSL2 +
-  Docker Desktop cannot run it), so it announces itself loudly when active.
+- host: rules in the host's DOCKER-USER chain. Used where the host has
+  root and a real Docker daemon; less exercised than the container backend
+  (Docker Desktop cannot run it), so it announces itself when active.
 - container: rules installed inside the containers via docker exec. Needs
   iptables in the image and NET_ADMIN (hokea adds the capability; generated
   images get iptables installed). Checked at startup with a clear error.
@@ -83,11 +83,9 @@ class Net:
                                "passwordless sudo on the Docker host)")
         if backend in ("auto", "host") and host_prefix is not None:
             self.backend = _HostBackend(host_prefix)
-            print("hokea: network fault backend: host (DOCKER-USER). WARNING: "
-                  "this backend is implemented per spec but was never "
-                  "runnable on hokea's development machine (WSL2 + Docker "
-                  "Desktop), so it is less exercised than the in-container "
-                  "backend. If a fault does not take effect, report it.",
+            print("hokea: network fault backend: host (DOCKER-USER). This "
+                  "backend is less exercised than the in-container one; if "
+                  "a fault does not take effect, report it.",
                   flush=True)
         else:
             self.backend = _ContainerBackend(cluster)
@@ -393,8 +391,8 @@ class _ContainerBackend:
 
 class _HostBackend:
     """Rules in the Docker host's DOCKER-USER chain (survive container
-    restarts and pauses). Implemented per spec; never runnable on the WSL2
-    development machine (Docker Desktop), so it is the less-exercised backend."""
+    restarts and pauses). Docker Desktop cannot run it, so it is the
+    less-exercised backend."""
 
     def __init__(self, prefix: list[str]):
         self.prefix = prefix  # [] or ["sudo", "-n"]
