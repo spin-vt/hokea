@@ -31,7 +31,10 @@ def test_partition_splits_replication_but_not_clients(cluster, net, run):
     """
     script = Script(ToyAdapter())
     steps: dict = {}
-    h = run(toy_ops, ToyAdapter(), duration=30, clients=3, assign="pinned",
+    # 60 s with the heal at 50: on the class cluster, proving a partition
+    # is in place can take tens of seconds, and the heal must not fire
+    # the instant the cut is verified. Offsets are earliest-starts.
+    h = run(toy_ops, ToyAdapter(), duration=60, clients=3, assign="pinned",
             script=script, settle=5,
             faults=[(8, lambda: net.partition([[1, 2], [3]])),
                     # runs right after partition() returns, i.e. cut verified
@@ -43,7 +46,7 @@ def test_partition_splits_replication_but_not_clients(cluster, net, run):
                     # without a cut this key replicates in milliseconds
                     (0, lambda: (time.sleep(3), steps.update(
                         get=script.do(Op("get", "cut-probe"), node=3)))[0]),
-                    (22, net.heal)],
+                    (50, net.heal)],
             state_reader=read_state)
 
     assert steps["put"].outcome == "ok", steps["put"]

@@ -719,7 +719,7 @@ uv run pytest -q
 
 ```
 ......                                                                   [100%]
-6 passed in 200.11s (0:03:20)
+6 passed in 231.44s (0:03:51)
 ```
 
 **Checkpoint — `6 passed`.**
@@ -731,8 +731,11 @@ they still run — that's the extra minute.)
 ### 2.3 What the partition test proves
 
 This test splits the cluster network into `{node 1, node 2}` on one side
-and `{node 3}` on the other, from second 8 to second 22 of a 30-second
-run. Three things, in order:
+and `{node 3}` on the other, from second 8 to second 50 of a 60-second
+run. (The run is longer than the kill test's because on the class
+cluster proving that a cut is really in place can take tens of seconds,
+and the cut has to be in place while the clients are still working.)
+Three things, in order:
 
 - **The cut is real.** hokea injects the fault and proves the cluster is
   actually partitioned before the test proceeds — there are subtle ways a
@@ -993,7 +996,7 @@ hokea: runner pod is being created...
 hokea: streaming pytest output from pod hokea-test-20260829-141530-3f2a-abc12 (Ctrl-C detaches; the Job keeps running)
 hokea runner: running: pytest -q
 ......                                                                   [100%]
-6 passed in 335.65s (0:05:35)
+6 passed in 366.20s (0:06:06)
 hokea runner: pytest exited 0; artifacts ready — holding up to 600s for the launcher to copy runs/ out
 hokea: copied 6 run(s) into ./runs/: 20260829-141612-test_other_nodes_stay_available_when_one_dies, ...
 hokea runner: copy-out confirmed; exiting
@@ -1465,7 +1468,7 @@ hokea-toydemo-alice-part0-x7k2m   partition
 
 (More lines for the same object may follow as its status updates, and the
 blank `DURATION` is on purpose: hokea heals by *deleting* the object at
-the 22-second mark rather than giving it a lifespan.) After the test
+the 50-second mark rather than giving it a lifespan.) After the test
 ends, press `Ctrl+C` and confirm nothing is left:
 
 ```bash
@@ -1482,7 +1485,7 @@ your first terminal:
 
 ```
 .                                                                        [100%]
-1 passed in 54.91s
+1 passed in 86.30s
 hokea runner: pytest exited 0; artifacts ready — holding up to 600s for the launcher to copy runs/ out
 hokea: copied 1 run(s) into ./runs/: 20260829-150312-test_partition_splits_replication_but_not_clients
 hokea runner: copy-out confirmed; exiting
