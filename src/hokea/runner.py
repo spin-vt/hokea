@@ -71,6 +71,19 @@ RUNNER_MEMORY = "2Gi"
 EXCLUDED_DIRS = {".venv", "venv", "runs", "__pycache__", ".hokea", "dist",
                  ".git", ".pytest_cache", ".ruff_cache", ".mypy_cache",
                  ".idea", ".vscode", "node_modules", ".eggs"}
+# Top-level files the runner never needs and that only eat the ConfigMap
+# budget: lockfiles (the runner image already has hokea, pytest and
+# requests) and pictures/archives (a plot_scale.py graph, a zipped
+# dataset). Skipped and named in one line.
+EXCLUDED_FILES = {"uv.lock", "poetry.lock", "Pipfile.lock", "package-lock.json"}
+EXCLUDED_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".pdf", ".zip",
+                     ".tar", ".gz", ".tgz", ".pyc", ".whl", ".egg"}
+
+
+def is_shippable_name(name: str) -> bool:
+    """False for lockfiles and image/archive files (see EXCLUDED_FILES and
+    EXCLUDED_SUFFIXES); shared by `hokea test` and `hokea k8s up`."""
+    return name not in EXCLUDED_FILES and Path(name).suffix.lower() not in EXCLUDED_SUFFIXES
 
 POLL_INTERVAL = 2.0        # seconds, all wait loops
 POD_START_TIMEOUT = 300.0  # scheduling + container start
@@ -96,11 +109,15 @@ def package_files(project_dir: Path) -> dict[str, Path]:
     gets named so a student with code in `lib/` finds out immediately."""
     files: dict[str, Path] = {}
     surprises: list[str] = []
+    junk: list[str] = []
     for entry in sorted(project_dir.iterdir()):
         if entry.name in EXCLUDED_DIRS:
             continue
         if not entry.is_file():
             surprises.append(entry.name)
+            continue
+        if not is_shippable_name(entry.name):
+            junk.append(entry.name)
             continue
         if not re.fullmatch(r"[-._a-zA-Z0-9]+", entry.name):
             raise LaunchError(
@@ -112,6 +129,9 @@ def package_files(project_dir: Path) -> dict[str, Path]:
         print(f"hokea: only top-level files ship to the cluster; skipping "
               f"{sorted(surprises)} — tests that import these will fail on "
               "the cluster", flush=True)
+    if junk:
+        print(f"hokea: not shipping {junk} (lockfiles, images and archives "
+              "are never needed on the cluster)", flush=True)
     if not files:
         raise LaunchError(
             f"nothing to ship: {project_dir} has no top-level files. Run "
@@ -457,7 +477,10 @@ def cmd_test(args) -> int:
           f"Job {run_name} in {client_ns} (servers will run in "
           f"{server_ns})", flush=True)
     try:
-        _kubectl(client_ns, "apply", "-f", str(manifest_path))
+        # Server-side apply: plain `kubectl apply` would copy the whole
+        # ConfigMap into a last-applied annotation, and annotations are
+        # capped at 256 KiB — a quarter of what a ConfigMap really holds.
+        _kubectl(client_ns, "apply", "--server-side", "-f", str(manifest_path))
     except KubectlNotFound as e:
         raise SystemExit(f"hokea: {e}") from None
     except CommandFailed as e:

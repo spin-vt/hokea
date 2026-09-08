@@ -1,13 +1,14 @@
 # Introductory lab — run it, break it, ship it, break it in prod
 
 This is a lab to introduce hokea, the distributed systems orchestration framework we will use,
-in four acts (plus a short measurement interlude):
+in four acts (plus a short measurement interlude). The times are
+generous — budget up to about two hours in all:
 
 1. **Run it locally** (~15 minutes) — a 3-node toy service in containers on
    your laptop, tests passing, evidence recorded.
-1. *Interlude* — **measure it** (~10 minutes): put the service under load,
-   read its throughput and latency, double the fleet to six nodes, and see
-   which numbers improve — and which don't.
+    - *Interlude* — **measure it** (~10 minutes): put the service under load,
+      read its throughput and latency, double the fleet to six nodes, and see
+      which numbers improve — and which don't.
 2. **Break it locally** (~15 minutes) — kill a node and cut the network
    while clients are hammering it, and read what hokea caught.
 3. **Ship it to the class cluster** (~40 minutes) — one command,
@@ -161,7 +162,10 @@ the class cluster uses to run programs across its machines, and the
 second half of the lab talks to it.
 Install kubectl on your laptop by following
 <https://kubernetes.io/docs/tasks/tools/> for your operating system (on
-Windows, install the *Linux* version inside WSL).
+Windows, install the *Linux* version inside WSL). That page's main
+install command uses `sudo`; if you can't use `sudo` on your laptop,
+follow the page's note on installing without root into a folder on your
+`PATH` (such as `~/.local/bin`) instead.
 
 **Verify:**
 
@@ -193,29 +197,29 @@ phone hotspot.
 - Your **kubeconfig** (the credentials file the cluster tools read).
   Download it yourself — about two minutes:
 
-  1. In a browser, go to <https://launch.cs.vt.edu> and sign in with
-     your **CS department account** (the same login you use for CS
-     department machines — not your main VT PID).
-  2. Find the cluster named **hokea** — click its name to open it, then
-     click the **Download KubeConfig** button (a download icon near the
-     top right; hovering over the icons shows their names). A file named
-     `hokea.yaml` lands in your downloads.
-  3. Put it where kubectl looks. kubectl only reads `~/.kube/config`,
-     and the file must be named exactly `config` — so rename it as you
-     copy:
+    1. In a browser, go to <https://launch.cs.vt.edu> and sign in with
+       your **CS department account** (the same login you use for CS
+       department machines — not your main VT PID).
+    2. Find the cluster named **hokea** — click its name to open it, then
+       click the **Download KubeConfig** button (a download icon near the
+       top right; hovering over the icons shows their names). A file named
+       `hokea.yaml` lands in your downloads.
+    3. Put it where kubectl looks. kubectl only reads `~/.kube/config`,
+       and the file must be named exactly `config` — so rename it as you
+       copy:
 
-     ```bash
-     mkdir -p ~/.kube && cp ~/Downloads/hokea.yaml ~/.kube/config
-     ```
+        ```bash
+        mkdir -p ~/.kube && cp ~/Downloads/hokea.yaml ~/.kube/config
+        ```
 
-     (On Windows, your browser saves into the *Windows* Downloads
-     folder, which your WSL shell sees at a different path: run
-     `ls /mnt/c/Users` to see the folder names, pick yours, and use
-     `cp "/mnt/c/Users/YOUR-WINDOWS-NAME/Downloads/hokea.yaml" ~/.kube/config`
-     — keep the quotes; they matter if the folder name has a space.
-     And on any machine: if a `~/.kube/config` already exists from
-     another course or job, this overwrites it — save the old one first
-     with `mv ~/.kube/config ~/.kube/config.backup`.)
+        (On Windows, your browser saves into the *Windows* Downloads
+        folder, which your WSL shell sees at a different path: run
+        `ls /mnt/c/Users` to see the folder names, pick yours, and use
+        `cp "/mnt/c/Users/YOUR-WINDOWS-NAME/Downloads/hokea.yaml" ~/.kube/config`
+        — keep the quotes; they matter if the folder name has a space.
+        And on any machine: if a `~/.kube/config` already exists from
+        another course or job, this overwrites it — save the old one first
+        with `mv ~/.kube/config ~/.kube/config.backup`.)
 
 If you have both, **verify** (with your own team's namespace) — the
 command asks the cluster to list your team's *pods* (running programs
@@ -445,10 +449,17 @@ when a run ends, so `docker ps` shows an empty table again after every
 test — the runs leave nothing behind on your laptop except the `runs/`
 folders themselves.
 
-Open the last one (the wildcard picks it for you):
+Open the last one. A word on picking "the last one": run directories
+are named by their start time, but later in this lab the runs that come
+back from the class cluster are stamped in UTC while local runs use your
+laptop's clock — so name order isn't always time order. Sort by the time
+the directory was written instead (`ls -td` = directories, newest first)
+and keep the winner's name in a shell variable for the next commands
+(if you open a new terminal later, run the `RUN=` line again):
 
 ```bash
-ls runs/*catches_it*/
+RUN=$(ls -td runs/*catches_it* | head -1)
+ls "$RUN"
 ```
 
 ```
@@ -480,7 +491,7 @@ What's in each, and why you care:
 Look at one line of real evidence:
 
 ```bash
-head -1 runs/*catches_it*/history.jsonl
+head -1 "$RUN/history.jsonl"
 ```
 
 ```
@@ -748,7 +759,8 @@ is each node's entire store at the end of the run. The key the test
 writes during the cut is named `cut-probe`:
 
 ```bash
-grep cut-probe runs/*partition*/history.jsonl
+RUN=$(ls -td runs/*partition* | head -1)
+grep cut-probe "$RUN/history.jsonl"
 ```
 
 ```
@@ -762,7 +774,7 @@ without a cut, replication lands in milliseconds. Now check the *final*
 states, captured after the network healed:
 
 ```bash
-grep -c cut-probe runs/*partition*/states/node-1.json runs/*partition*/states/node-3.json
+grep -c cut-probe "$RUN/states/node-1.json" "$RUN/states/node-3.json"
 ```
 
 ```
@@ -781,11 +793,12 @@ and the node that never received it.
 
 !!! warning "Troubleshooting"
 
-    - **`grep: runs/*partition*/history.jsonl: No such file or
-      directory`** — there is no partition run yet: the test didn't pass
-      (scroll up for pytest's error) or you're not in `toy-demo`.
-    - **Several runs match the `*partition*` wildcard** — you ran the
-      test more than once; that's fine, read the newest timestamps.
+    - **`ls: cannot access 'runs/*partition*': No such file or
+      directory`** (and then a `grep` complaint) — there is no partition
+      run yet: the test didn't pass (scroll up for pytest's error) or
+      you're not in `toy-demo`.
+    - **You ran the test more than once** — that's fine; the `RUN=` line
+      picks the most recently written run.
 
 ### 2.4 Write your own fault schedule
 
@@ -821,6 +834,9 @@ answered, and run `uv run pytest -q` again. The times are "earliest
 start": each
 action fires once its offset has passed and the previous action finished.
 Everything still lands in `faults.jsonl` with requested/done timestamps.
+From here on, your counts will be one higher than the ones I show —
+`7 passed` where I show `6 passed`, one more file shipped — because of
+`test_mine.py`.
 
 ### 2.5 A check answers one question
 
@@ -993,9 +1009,13 @@ because pods on real machines take longer to come up than containers on
 your laptop. During long stretches with no pytest output, hokea prints a
 reassurance line about once a minute —
 `hokea: still waiting for pytest to finish (pod phase Running)` — so a
-long suite never just looks hung. Your `6 passed` line may also say
-something like `, 9 warnings` — warnings are advisory notices from
-Python, not problems; only `failed` or `error` mean trouble. And you may
+long suite never just looks hung. Above the `6 passed` line you'll see
+a block headed `warnings summary`, and the line itself ends with
+something like `, 75 warnings` — the count varies from run to run.
+Warnings are advisory notices from Python (one mentions `fork()` and
+deadlocks — a Python deprecation notice, not a report that anything
+went wrong); they are not failures, and only `failed` or `error` mean
+trouble. And you may
 see a line about `skipping ['__pycache__']` — that's hokea leaving out a
 cache folder Python creates, which your tests don't need.)
 
@@ -1021,10 +1041,13 @@ A few things worth knowing about this command:
 
 - **Only the files at the top level of your directory ship.** The ride to
   the cluster is a **ConfigMap** — a Kubernetes object that holds a small
-  bundle of files — and everything together must fit in about 1 MiB.
-  Source code fits easily; if you go over, the error names your biggest
-  files. hokea skips the obvious machinery silently (`.venv`, `runs/`,
-  caches) and *names anything else it skips out loud* — if you see
+  bundle of files. Some files are skipped automatically, and hokea names
+  them in one line: the obvious machinery (`.venv`, `runs/`, caches),
+  lockfiles such as `uv.lock`, and image and archive files (`.png`,
+  `.pdf`, `.zip`, and the like). Whatever is left must total no more
+  than about 1 MiB — source code fits easily; if you go over, hokea
+  refuses to start the run and names your biggest files. hokea also
+  *names anything else it skips out loud* — if you see
   `hokea: only top-level files ship to the cluster; skipping ['lib'] —
   tests that import these will fail on the cluster`, it means exactly
   that: code you keep in that subdirectory won't be there.
@@ -1131,10 +1154,12 @@ workload's should **not** — the toy replicates every write to every
 node, so extra machines bring exactly as much new replication work as
 new capacity. The next section turns this into the graph.
 
-Confirm all four runs came back:
+Confirm all four runs came back — `ls -t` lists newest first, so the
+Interlude's local `throughput` runs sit further down and `head -4` cuts
+them off:
 
 ```bash
-ls runs/ | grep throughput
+ls -t runs/ | grep throughput | head -4
 ```
 
 ```
@@ -1144,8 +1169,9 @@ ls runs/ | grep throughput
 20260829-145601-test_mixed_throughput
 ```
 
-**Checkpoint — four `throughput` run directories in `runs/`** (two
-`read`, two `mixed`; timestamps yours).
+**Checkpoint — the four newest `throughput` run directories are your
+cluster runs** (two `read`, two `mixed`; timestamps yours — remember
+these are stamped in UTC).
 
 !!! warning "Troubleshooting"
 
@@ -1184,7 +1210,11 @@ wrote scale.png — open it to see how throughput scaled
 (Your numbers and skipped-run count will differ; if you repeated an
 experiment, a `using your most recent ... run` line tells you the newest
 one won.) Open the picture — macOS: `open scale.png`; Linux:
-`xdg-open scale.png`; WSL: `explorer.exe scale.png`.
+`xdg-open scale.png`; WSL: `explorer.exe scale.png`. Two side effects
+to know about: `uv add matplotlib` makes `uv.lock` grow, and
+`plot_scale.py` leaves `scale.png` in your project folder — both are
+skipped automatically when hokea ships your directory to the cluster,
+so the cluster runs later in this lab are unaffected.
 
 What you should see: two bars per fleet size. The **reads only** bar
 roughly doubles from 3 nodes to 6 — reads can be served by any node
@@ -1246,8 +1276,8 @@ take it down:  hokea k8s down --name alice
 
 (The `skipping` line is normal, and the exact list varies: anything in
 your directory that isn't a top-level source file — the project
-environment, `runs/`, caches — is left out of the shipment, which is
-exactly what you want. One quirk of the printed hints: they omit the
+environment, `runs/`, caches, and by now `uv.lock` and `scale.png` —
+is left out of the shipment, which is exactly what you want. One quirk of the printed hints: they omit the
 `uv run` prefix, so type the last one as
 `uv run hokea k8s down --name alice`.)
 
@@ -1333,13 +1363,26 @@ hokea created out of your namespace with:
 ../hokea/examples/toyserver/teardown.sh team-NN   # team-NN → your team's namespace
 ```
 
+```
+No resources found
+No resources found
+```
+
+Two lines of `No resources found` is the answer you want: the script
+asks the cluster to delete everything hokea labeled in your namespace
+(pods, services, and files in one sweep, chaos experiments in a second),
+and each sweep reports that there was nothing left to remove — nothing
+was left behind.
+
 **Limits of the no-image Approach A.** The shipment (for `hokea test`
 and `hokea k8s up` both) carries only the files at the *top level* of
 your project directory (no subdirectories — unlike local runs, which
-mount everything), and everything together must fit in about 1 MiB.
-Source code fits easily; a compiled binary, a big dependency, or a
-bundled dataset does not. When your project outgrows this, that's what
-Approach B is for.
+mount everything). Lockfiles (`uv.lock`) and image or archive files are
+skipped automatically, and the launcher names what it skipped; whatever
+remains must total no more than about 1 MiB, or the launcher refuses to
+run and names your biggest files. Source code fits easily; a compiled
+binary, a big dependency, or a bundled dataset does not. When your
+project outgrows this, that's what Approach B is for.
 
 **Differences you'll notice on the cluster** These matter when you write *your*
 project's server — the toy already follows them, so there's nothing to do right
@@ -1450,9 +1493,16 @@ Same test file as Act 2, and the run's evidence is back in your local
 `runs/` as always. Same verdicts, now proven against real machines with
 more realistic fault machinery.
 
-You can re-run Act 2's two `grep`s on the new run directory (the newest
-`*partition*` one) and find the same acked-then-lost write, this time
-across real machines.
+You can re-run Act 2's two `grep`s on the new run directory and find the
+same acked-then-lost write, this time across real machines. Several
+`*partition*` runs match by now, and the cluster one is stamped in UTC,
+so pick it by time written, as in Act 2:
+
+```bash
+RUN=$(ls -td runs/*partition* | head -1)
+grep cut-probe "$RUN/history.jsonl"
+grep -c cut-probe "$RUN/states/node-1.json" "$RUN/states/node-3.json"
+```
 
 **Checkpoint — `hokea: tests passed` for the partition test on the
 cluster** (and, if you watched, you saw the `networkchaos` object appear

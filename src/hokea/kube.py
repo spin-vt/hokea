@@ -391,7 +391,9 @@ class KubeCluster:
         path = self.workdir / "manifests.yaml"
         path.write_text(yaml.safe_dump_all(manifests, sort_keys=False))
         try:
-            self._kubectl("apply", "-f", str(path))
+            # Server-side: client-side apply would stash the whole source
+            # ConfigMap in a last-applied annotation (256 KiB cap).
+            self._kubectl("apply", "--server-side", "-f", str(path))
             self._wait_pods_ready(self.up_timeout)
             if self.expose == "nodeport":
                 if self.node_host is None:
@@ -817,11 +819,18 @@ class KubeCluster:
                         for i in range(1, self.n_nodes + 1))
 
     def _configmap_manifest(self) -> dict:
-        files = sorted(p for p in self.src.iterdir() if p.is_file())
+        from .runner import is_shippable_name
+        files = sorted(p for p in self.src.iterdir()
+                       if p.is_file() and is_shippable_name(p.name))
         skipped = sorted(p.name for p in self.src.iterdir() if not p.is_file())
+        junk = sorted(p.name for p in self.src.iterdir()
+                      if p.is_file() and not is_shippable_name(p.name))
         if skipped:
             print(f"hokea: ConfigMap source mode ships top-level regular "
                   f"files only; skipping {skipped}", flush=True)
+        if junk:
+            print(f"hokea: not shipping {junk} (lockfiles, images and "
+                  "archives are never needed on the cluster)", flush=True)
         total = sum(p.stat().st_size for p in files)
         if total > 900_000:
             raise ValueError(
