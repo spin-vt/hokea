@@ -1,0 +1,52 @@
+[project]
+name = "hokea"
+version = "0.1.0"
+description = "Fault-injection and testing framework for distributed-systems capstone projects"
+requires-python = ">=3.11"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+dependencies = [
+    "requests>=2.31",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+# Same as the dev extra; this is what `uv sync` / `uv run` install by default.
+[dependency-groups]
+dev = ["pytest>=8.0"]
+# The user documentation site: `uv run --group docs mkdocs serve`.
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.6,<10",
+    "mkdocstrings[python]>=0.27,<1",
+    # mkdocstrings uses ruff (or black) to wrap long signatures readably.
+    "ruff>=0.8",
+    # Builds the all-pages-in-one print page that scripts/docs-single-page.sh
+    # turns into a single self-contained HTML file.
+    "mkdocs-print-site-plugin>=2.6,<3",
+    # scripts/docs_single_page.py does DOM surgery on that print page
+    # (chrome removal, TOC injection, anchor repair).
+    "beautifulsoup4>=4.12,<5",
+]
+
+[project.scripts]
+hokea = "hokea.cli:main"
+
+[project.entry-points.pytest11]
+hokea = "hokea.pytest_plugin"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Markers used by the example tests under examples/.
+[tool.pytest.ini_options]
+markers = [
+    "docker: needs a working Docker daemon",
+    "slow: long-running (excluded from the default suite)",
+]

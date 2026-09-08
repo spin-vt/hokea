@@ -1,0 +1,77 @@
+site_name: hokea
+site_description: >-
+  Fault injection and testing for distributed-systems capstone projects.
+site_url: https://spin-vt.github.io/hokea/
+repo_url: https://github.com/spin-vt/hokea
+repo_name: spin-vt/hokea
+
+theme:
+  name: material
+
+# Every page lives under docs/ (the introductory lab is docs/lab.md;
+# docs/index.md is the short landing page) so `mkdocs serve` autoreloads
+# on any edit — it only watches docs/.
+# Listing any plugin disables the defaults, so search must be re-listed.
+# mkdocstrings renders the API reference (docs/api/*) from the source
+# docstrings; `paths: [src]` lets it find the package without an install.
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            # The docstrings are prose, not Args:-sections; google style is
+            # a safe no-op parser for them.
+            docstring_style: google
+            show_source: false
+            members_order: source
+            merge_init_into_class: true
+            show_root_heading: true
+            show_root_full_path: false
+            separate_signature: true
+            show_signature_annotations: true
+            heading_level: 2
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            # Undocumented public methods (kill, stop, logs, ...) are still
+            # part of the contract: show them rather than hiding them.
+            show_if_no_docstring: true
+            filters: ["!^_"]
+  # mkdocstrings would auto-append autorefs after print-site otherwise,
+  # tripping print-site's "I must be last" check.
+  - autorefs
+  # Must stay last: combines every page into site/print_page/ for the
+  # single-file export (scripts/docs-single-page.sh). Not linked in the nav.
+  - print-site:
+      add_to_navigation: false
+      print_page_title: hokea — full documentation
+      add_table_of_contents: true
+      toc_depth: 2
+      include_css: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - def_list
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Introductory lab: lab.md
+  - Adapters: adapters.md
+  - Artifacts: artifacts.md
+  - Checks: checks.md
+  - Data & durability: data-and-durability.md
+  - Testing your claims: testing-your-claims.md
+  - Datasets: datasets.md
+  - API reference:
+      - Overview: api/index.md
+      - Running your system: api/cluster.md
+      - Faults: api/faults.md
+      - Workload & runs: api/workload.md
+      - Checks: api/checks.md
+      - Fixtures & CLI: api/fixtures-and-cli.md

@@ -1,0 +1,27 @@
+# Export-only config for the single-file build (scripts/docs-single-page.sh).
+# Inherits everything from mkdocs.yml and overrides ONLY:
+#   - site_dir: keep the export build out of the real site/ output
+#   - nav: the single-page reading order. mkdocs-print-site concatenates
+#     pages in nav order. Today the order is the same as mkdocs.yml's
+#     (home -> introductory lab -> task guides -> reference); it is kept here so
+#     the export can diverge from the sidebar later without touching the
+#     real site config. Every page of the real site is still included.
+INHERIT: mkdocs.yml
+site_dir: site-export
+
+nav:
+  - Home: index.md
+  - Introductory lab: lab.md
+  - Adapters: adapters.md
+  - Artifacts: artifacts.md
+  - Checks: checks.md
+  - Data & durability: data-and-durability.md
+  - Testing your claims: testing-your-claims.md
+  - Datasets: datasets.md
+  - API reference:
+      - Overview: api/index.md
+      - Running your system: api/cluster.md
+      - Faults: api/faults.md
+      - Workload & runs: api/workload.md
+      - Checks: api/checks.md
+      - Fixtures & CLI: api/fixtures-and-cli.md

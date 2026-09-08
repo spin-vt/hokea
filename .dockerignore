@@ -1,0 +1,11 @@
+# The runner image build (docker build -f runner/Dockerfile .) uses the
+# repo root as context so it can COPY src/ + pyproject.toml. Allowlist
+# style: everything is excluded, then the few things the image needs are
+# let back in — datasets/, .git/, runs/, site/ etc. never reach the
+# builder.
+*
+!pyproject.toml
+!src
+src/hokea.egg-info
+src/**/__pycache__
+!runner
