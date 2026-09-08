@@ -13,9 +13,10 @@
 
 FROM python:3.12-slim
 
-# kubectl, pinned and verified. v1.35.8 = the newest 1.35 client, matching
-# the class cluster's v1.35.7 server. The sha512 is dl.k8s.io's published
-# checksum for this exact binary; a mismatched download fails the build.
+# kubectl, pinned and verified. Keep the client within one minor version
+# of the cluster's server (v1.35.8 matches our class cluster's 1.35
+# server). The sha512 is dl.k8s.io's published checksum for this exact
+# binary; a mismatched download fails the build.
 ARG KUBECTL_VERSION=v1.35.8
 ARG KUBECTL_SHA512=56ee1b65e8289d9f20b103bb1dd9ac9067eb14aa7546e31884653ee82f6faee53644baa4381b783f98f32898849ccdf4054383b11e925bb8857a92e1714354ed
 RUN python -c "import urllib.request; urllib.request.urlretrieve( \

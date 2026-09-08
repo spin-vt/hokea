@@ -59,7 +59,9 @@ PROJECT_DIR = "/project"
 # same budget the k8s backend's source ConfigMap uses.
 CONFIGMAP_BUDGET = 900_000
 
-# Client-namespace LimitRange: default 2 CPU / 2Gi, max 4 CPU / 8Gi.
+# Sized to the client namespace's LimitRange on the class cluster
+# (default 2 CPU / 2Gi, max 4 CPU / 8Gi). Another cluster may set
+# different limits; adjust these to match its LimitRange.
 DEFAULT_RUNNER_CPUS = 2.0
 MAX_RUNNER_CPUS = 4.0
 RUNNER_MEMORY = "2Gi"
@@ -427,8 +429,8 @@ def cmd_test(args) -> int:
         raise SystemExit(
             f"hokea: --runner-cpus {args.runner_cpus:g} is outside what the "
             f"client namespace allows (more than 0, at most "
-            f"{MAX_RUNNER_CPUS:g} — the namespace's LimitRange caps "
-            "containers at 4 CPU / 8Gi).")
+            f"{MAX_RUNNER_CPUS:g}, the LimitRange cap on the class "
+            "cluster).")
     pytest_args = list(args.pytest_args)
     if pytest_args and pytest_args[0] == "--":
         pytest_args = pytest_args[1:]
